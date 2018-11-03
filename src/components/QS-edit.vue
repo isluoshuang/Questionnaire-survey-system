@@ -94,6 +94,7 @@
   </div>
 </template>
 
+<script src="jquery.js"></script>
 <script>
 import storage from '../store.js'
 import calendarInput from './calendar-input'
@@ -108,7 +109,7 @@ export default {
   data() {
     return {
       qsItem: {},
-      qsList: storage.get(),
+      qsList: [],
       isError: false,
       showBtn: false,
       titleChange: false,
@@ -126,32 +127,49 @@ export default {
       isGoIndex: false
     }
   },
-  beforeRouteEnter(to, from ,next) {
-    let num = to.params.num
-    let theItem = {}
-    if (num != 0) {
-      let length = storage.get().length
-      if (num < 0 || num > length) {
-        alert('非法路由!')
-        next('/')
-      } else {
-        for (let i = 0; i < length; i++) {
-          if (storage.get()[i].num == num) {
-            theItem = storage.get()[i]
-            break
-          }
-        }
-      }
-      if (theItem.state === 'noissue') {
-        next()
-      } else {
-        alert('非法路由')
-        next('/')
-      }
-    } else {
-      next()
-    }
-  },
+  // mounted() {
+  //   var that = this;
+  //   $.ajax({  
+  //       type:"get",//type可以为post也可以为get  
+  //       url: "../list/",  
+  //       data:{
+  //       },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+  //       dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+  //       success:function(value){ 
+  //           that.qsList = value;                       
+  //       },  
+  //       error:function(value){ 
+  //           that.loading = false; 
+  //           alert("查询出现了错误！");  
+  //       } 
+  //   });       
+  // },  
+  // beforeRouteEnter(to, from ,next) {
+  //   let num = to.params.num
+  //   let theItem = {}
+  //   if (num != 0) {
+  //     let length = qsList.length
+  //     if (num < 0 || num > length) {
+  //       alert('非法路由!')
+  //       next('/')
+  //     } else {
+  //       for (let i = 0; i < length; i++) {
+  //         if (qsList[i].num == num) {
+  //           theItem = qsList[i]
+  //           break
+  //         }
+  //       }
+  //     }
+  //     if (theItem.state === 'noissue') {
+  //       next()
+  //     } else {
+  //       alert('非法路由')
+  //       next('/')
+  //     }
+  //   } else {
+  //     next()
+  //   }
+  // },
   created() {
     this.fetchData()
   },
@@ -164,7 +182,7 @@ export default {
           maxYear: 2030,
           maxMonth: 3,
           maxDay: 20
-        }
+        }      
       if (this.$route.params.num == 0) {
         let item = {}
         item.num        = this.qsList.length + 1
@@ -303,8 +321,36 @@ export default {
       if (this.qsItem.question.length === 0) {
         this.showDialog = false
         alert('问卷为空无法保存')
-      } else {
-        storage.save(this.qsList)
+      } 
+      else {
+        var list = this.qsList;
+        console.log(list);
+        $.ajax({  
+            type:"post",//type可以为post也可以为get  
+            url: "../editList/",
+            data:
+              JSON.stringify(list)
+              // "num": list['num'],
+              // "title": list['title'],
+              // "time": list['time'],
+              // "state": list['state'],
+              // "stateTitle": list['stateTitle'],
+              // "checked": list['checked'],
+              // "question": list['question']
+            ,//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            contentType: 'application/json; charset=UTF-8',
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            success:function(value){ 
+              if (value["status"] == 'success') {
+                this.$Message.success('新建问卷成功!')
+              }                     
+            },  
+            error:function(value){ 
+                that.loading = false; 
+                alert("新建问卷失败！");  
+            } 
+        });  
+        // storage.save(this.qsList)
         this.info = '是否发布?'
         this.isGoIndex = true
       }
@@ -312,7 +358,25 @@ export default {
       yield
       this.qsItem.state = 'inissue'
       this.qsItem.stateTitle = '发布中'
-      storage.save(this.qsList)
+      var list = this.qsList;
+      $.ajax({  
+          type:"post",//type可以为post也可以为get  
+          url: "../editList/",  
+          data:{
+            list
+          },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+          dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+          success:function(value){ 
+            if (value["status"] == 'success') {
+              this.$Message.success('新建问卷成功!')
+            }                     
+          },  
+          error:function(value){ 
+              that.loading = false; 
+              alert("新建问卷失败！");  
+          } 
+      });        
+      // storage.save(this.qsList)
       this.showDialog = false
       this.$router.push({path:'/'})
     },
@@ -326,7 +390,25 @@ export default {
       } else {
         this.qsItem.state = 'inissue'
         this.qsItem.stateTitle = '发布中'
-        storage.save(this.qsList)
+        var list = this.qsList;
+        $.ajax({  
+            type:"post",//type可以为post也可以为get  
+            url: "../editList/",  
+            data:{
+              list
+            },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            success:function(value){ 
+              if (value["body"].status == 'success') {
+                this.$Message.success('新建问卷成功!')
+              }                     
+            },  
+            error:function(value){ 
+                that.loading = false; 
+                alert("新建问卷失败！");  
+            } 
+        });          
+        // storage.save(this.qsList)
         this.showDialog = false
         this.$router.push({path:'/'})
       }

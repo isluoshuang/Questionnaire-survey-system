@@ -10,6 +10,8 @@
  * description app.vue
  */
 import vHeader from './components/public/header'
+import $ from 'jquery'
+
 export default {
   name: 'app',
   components: {

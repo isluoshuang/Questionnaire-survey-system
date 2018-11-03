@@ -45,6 +45,7 @@
   </div>
 </template>
 
+<script src="jquery.js"></script>
 <script>
 import storage from '../store.js'
 
@@ -62,70 +63,93 @@ import storage from '../store.js'
       }
     },
     mounted() {
-      if (storage.get() !== null) {
-        this.qsList = storage.get();
-        this.qsList.forEach( item => {
-          let [year, month, day] = item.time.split('-')
-          if (year < new Date().getFullYear()) {
-            item.state = 'issueed'
-            item.stateTitle = '已发布'
-          } else if (year == new Date().getFullYear() 
-            && month < new Date().getMonth() + 1) {
-            item.state = 'issueed'
-            item.stateTitle = '已发布'
-          } else if (year == new Date().getFullYear() 
-            && month == new Date().getMonth() + 1 
-            && day < new Date().getDate()) {
-            item.state = 'issueed'
-            item.stateTitle = '已发布'
-          }
-        })
-      } 
-      else {
-        storage.save([
+      var that = this;
+      $.ajax({  
+          type:"get",//type可以为post也可以为get  
+          url: "../list/",  
+          data:{
+          },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+          dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+          success:function(value){ 
+              that.qsList = value;
+              // console.log("hhhhh\n")
+              // console.log(that.qsList)
+              //console.log(save_value);
+              that.qsList.forEach( item => {
+                let [year, month, day] = item.time.split('-')
+                if (year < new Date().getFullYear()) {
+                  item.state = 'issueed'
+                  item.stateTitle = '已发布'
+                } else if (year == new Date().getFullYear() 
+                  && month < new Date().getMonth() + 1) {
+                  item.state = 'issueed'
+                  item.stateTitle = '已发布'
+                } else if (year == new Date().getFullYear() 
+                  && month == new Date().getMonth() + 1 
+                  && day < new Date().getDate()) {
+                  item.state = 'issueed'
+                  item.stateTitle = '已发布'
+                }
+              })               
+               
+          },  
+          error:function(value){ 
+              that.loading = false; 
+              alert("查询出现了错误！");  
+          } 
+      });       
+      // if (storage.get() !== null) {
+      //   this.qsList = storage.get();
+        // this.qsList.forEach( item => {
+        //   let [year, month, day] = item.time.split('-')
+        //   if (year < new Date().getFullYear()) {
+        //     item.state = 'issueed'
+        //     item.stateTitle = '已发布'
+        //   } else if (year == new Date().getFullYear() 
+        //     && month < new Date().getMonth() + 1) {
+        //     item.state = 'issueed'
+        //     item.stateTitle = '已发布'
+        //   } else if (year == new Date().getFullYear() 
+        //     && month == new Date().getMonth() + 1 
+        //     && day < new Date().getDate()) {
+        //     item.state = 'issueed'
+        //     item.stateTitle = '已发布'
+        //   }
+        // })
+      // } 
+      // else {
+      //   storage.save([
 
-          { 'num': 1, 
-            'title': '第一份问卷', 
-            'time': '2030-1-1', 
-            'state': 'inissue', 
-            'stateTitle': '发布中', 
-            'checked': false, 
-            'question': [
-              {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
-              {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
-              {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
-            ]
-          },
+          // { 'num': 1, 
+          //   'title': '第一份问卷', 
+          //   'time': '2030-1-1', 
+          //   'state': 'inissue', 
+          //   'stateTitle': '发布中', 
+          //   'checked': false, 
+          //   'question': [
+          //     {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
+          //     {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
+          //     {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
+          //   ]
+          // },
 
-          { 'num': 2,
-            'title': '第二份问卷',
-            'time': '2030-1-1',
-            'state': 'noissue',
-            'stateTitle': '未发布',
-            'checked': false, 
-            'question': [
-              {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
-              {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
-              {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
-            ]
-          },
-
-          { 'num': 3,
-            'title': '第三份问卷', 
-            'time': '2017-3-27', 
-            'state': 'issueed', 
-            'stateTitle': '已发布', 
-            'checked': false, 
-            'question': [
-              {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
-              {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
-              {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
-            ]
-          }
+      //     { 'num': 2,
+      //       'title': '第二份问卷',
+      //       'time': '2030-1-1',
+      //       'state': 'noissue',
+      //       'stateTitle': '未发布',
+      //       'checked': false, 
+      //       'question': [
+      //         {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
+      //         {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
+      //         {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
+      //       ]
+      //     },
           
-        ]);
-        this.qsList = storage.get();
-      }
+      //   ]);
+      //   this.qsList = storage.get();
+      // }
+      console.log(this.qsList)
     },
     methods: {
       showDialogMsg(info) {
@@ -136,11 +160,31 @@ import storage from '../store.js'
         yield this.showDialogMsg('确认要删除此问卷？')
 
         yield (() => {
+          var that = this;
           let index = 0;
           for (let length = this.qsList.length; index < length; index++) {
             if (this.qsList[index].num === num) break;
           }
-          this.qsList.splice(index, 1); //delete the index element
+          let dict_num = {"num": num}
+          let json_num = JSON.stringify(dict_num)
+          console.log(dict_num)
+          console.log(json_num)
+          $.ajax({  
+              type:"post",//type可以为post也可以为get  
+              url: "../deleteList/",  
+              data:
+                json_num
+              ,//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+              dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+              success:function(value){ 
+                  that.qsList.splice(index, 1); //delete the index element                             
+              },  
+              error:function(value){ 
+                  that.loading = false; 
+                  alert("删除失败！");  
+              } 
+          }); 
+
           this.showDialog = false;
         })();
       },
