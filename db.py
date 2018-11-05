@@ -39,10 +39,18 @@ def addList(data):
     conn = open()
     mydb = conn[database]
     mycol = mydb[connection]
-    result = mycol.find()
-    result_list = list(result[:])
-    data['num'] = len(result_list)+1
-    mycol.insert_one(data)
+    # result = mycol.find()
+    # result_list = list(result[:])
+    if data["num"] == 1:
+        result = list(mycol.find().sort("num", -1).limit(1))[0]['num']
+        data["num"] = result + 1
+        mycol.insert_one(data)
+    else:
+        myquery = { "num": data["num"] }
+        newvalues = { "$set": data }
+        mycol.update_one(myquery, newvalues)
+        # mycol.delete_one(myquery)
+
     close(conn)
     return
 

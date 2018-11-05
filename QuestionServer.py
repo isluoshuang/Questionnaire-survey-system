@@ -25,6 +25,7 @@ def index():
 @app.route('/list/', methods=["get"])
 def showList():
     result = db.get_list_info()
+    # print(result)
     ret = []
     for i in result:
         ret.append({
@@ -36,14 +37,15 @@ def showList():
             "checked": i['checked'],
             "question": i['question']
         })
-    # print (json.dumps(ret))
+    # print (ret)
     return json.dumps(ret)
 
 #新增问卷
 @app.route('/editList/',methods=["POST"])
 def addList():
-    temp = request.get_json() #bytes
-    data = temp[0]
+    data = request.get_json() #bytes
+    print("hhhhh\n")
+    print(data)    
     db.addList(data)
     ret = {"status": "success"}
     return json.dumps(ret)
@@ -51,7 +53,7 @@ def addList():
 #删除问卷
 @app.route('/deleteList/',methods=["POST"])
 def deleteList():
-    print("hhhhhhh\n")
+    # print("hhhhhhh\n")
     temp = request.get_data()
     num = bytes.decode(temp)
     num = json.loads(num)

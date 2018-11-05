@@ -195,14 +195,29 @@ export default {
         this.qsItem = item
         this.qsList.push(this.qsItem)
       } else {
-        let i = 0
-        for (let length = this.qsList.length; i < length; i++) {
-          if (this.qsList[i].num == this.$route.params.num) {
-            this.qsItem = this.qsList[i]
-            break
-          }
-        }
-        if ( i === this.qsList.length) this.isError = true
+        var that = this;
+        $.ajax({  
+            type:"get",//type可以为post也可以为get  
+            url: "../list/",  
+            data:{
+            },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            success:function(value){ 
+              that.qsList = value            
+              let i = 0
+              for (let length = that.qsList.length; i < length; i++) {
+                if (that.qsList[i].num == that.$route.params.num) {
+                  that.qsItem = that.qsList[i]
+                  break
+                }
+              }
+              if ( i === that.qsList.length) that.isError = true    
+            },  
+            error:function(value){ 
+                that.loading = false; 
+                alert("编辑出现了错误！");  
+            } 
+        });          
       } 
     },
     getMsg(item) {
@@ -323,7 +338,8 @@ export default {
         alert('问卷为空无法保存')
       } 
       else {
-        var list = this.qsList;
+        var list = this.qsItem;
+        console.log("hhhhh")
         console.log(list);
         $.ajax({  
             type:"post",//type可以为post也可以为get  
@@ -342,7 +358,7 @@ export default {
             dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
             success:function(value){ 
               if (value["status"] == 'success') {
-                this.$Message.success('新建问卷成功!')
+                // this.$Message.success('新建问卷成功!')
               }                     
             },  
             error:function(value){ 
@@ -358,7 +374,7 @@ export default {
       yield
       this.qsItem.state = 'inissue'
       this.qsItem.stateTitle = '发布中'
-      var list = this.qsList;
+      var list = this.qsItem;
       $.ajax({  
           type:"post",//type可以为post也可以为get  
           url: "../editList/",  
@@ -390,7 +406,7 @@ export default {
       } else {
         this.qsItem.state = 'inissue'
         this.qsItem.stateTitle = '发布中'
-        var list = this.qsList;
+        var list = this.qsItem;
         $.ajax({  
             type:"post",//type可以为post也可以为get  
             url: "../editList/",  
@@ -426,17 +442,17 @@ export default {
       return this.qsItem.question.length
     }
   },
-  watch: {
-    '$route': 'fetchData',
-    qsItem: {
-      handler(newVal) {
-        newVal.question.forEach( (item, index) => {
-          item.num = `Q${index + 1}`
-        } )
-      },
-      deep: true
-    }
-  }
+  // watch: {
+  //   '$route': 'fetchData',
+  //   qsItem: {
+  //     handler(newVal) {
+  //       newVal.question.forEach( (item, index) => {
+  //         item.num = `Q${index + 1}`
+  //       } )
+  //     },
+  //     deep: true
+  //   }
+  // }
 }
 </script>
 

@@ -47,7 +47,7 @@
 
 <script src="jquery.js"></script>
 <script>
-import storage from '../store.js'
+// import storage from '../store.js'
 
 /**
  * A module that define qs-list router view
@@ -71,10 +71,8 @@ import storage from '../store.js'
           },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
           dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
           success:function(value){ 
+              // console.log(value)
               that.qsList = value;
-              // console.log("hhhhh\n")
-              // console.log(that.qsList)
-              //console.log(save_value);
               that.qsList.forEach( item => {
                 let [year, month, day] = item.time.split('-')
                 if (year < new Date().getFullYear()) {
@@ -98,58 +96,6 @@ import storage from '../store.js'
               alert("查询出现了错误！");  
           } 
       });       
-      // if (storage.get() !== null) {
-      //   this.qsList = storage.get();
-        // this.qsList.forEach( item => {
-        //   let [year, month, day] = item.time.split('-')
-        //   if (year < new Date().getFullYear()) {
-        //     item.state = 'issueed'
-        //     item.stateTitle = '已发布'
-        //   } else if (year == new Date().getFullYear() 
-        //     && month < new Date().getMonth() + 1) {
-        //     item.state = 'issueed'
-        //     item.stateTitle = '已发布'
-        //   } else if (year == new Date().getFullYear() 
-        //     && month == new Date().getMonth() + 1 
-        //     && day < new Date().getDate()) {
-        //     item.state = 'issueed'
-        //     item.stateTitle = '已发布'
-        //   }
-        // })
-      // } 
-      // else {
-      //   storage.save([
-
-          // { 'num': 1, 
-          //   'title': '第一份问卷', 
-          //   'time': '2030-1-1', 
-          //   'state': 'inissue', 
-          //   'stateTitle': '发布中', 
-          //   'checked': false, 
-          //   'question': [
-          //     {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
-          //     {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
-          //     {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
-          //   ]
-          // },
-
-      //     { 'num': 2,
-      //       'title': '第二份问卷',
-      //       'time': '2030-1-1',
-      //       'state': 'noissue',
-      //       'stateTitle': '未发布',
-      //       'checked': false, 
-      //       'question': [
-      //         {'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': true, 'options': ['选项一', '选项二']},
-      //         {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': true, 'options': ['选项一', '选项二', '选项三', '选项四']},
-      //         {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': true}
-      //       ]
-      //     },
-          
-      //   ]);
-      //   this.qsList = storage.get();
-      // }
-      console.log(this.qsList)
     },
     methods: {
       showDialogMsg(info) {
@@ -157,6 +103,9 @@ import storage from '../store.js'
         this.info = info;
       },
       *delItem(num) {
+        // console.log(this.qsList)
+        // console.log("hhhhh")
+        // console.log(num)
         yield this.showDialogMsg('确认要删除此问卷？')
 
         yield (() => {
@@ -167,8 +116,8 @@ import storage from '../store.js'
           }
           let dict_num = {"num": num}
           let json_num = JSON.stringify(dict_num)
-          console.log(dict_num)
-          console.log(json_num)
+          // console.log(dict_num)
+          // console.log(json_num)
           $.ajax({  
               type:"post",//type可以为post也可以为get  
               url: "../deleteList/",  
@@ -259,17 +208,17 @@ import storage from '../store.js'
         return group;
       }
     },
-    watch: {
-      qsList: {
-        handler(val) {
-          val.forEach( (item, index) => {
-            item.num = index + 1
-          } )
-          storage.save(val);
-        },
-        deep: true
-      }
-    }
+    // watch: {
+    //   qsList: {
+    //     handler(val) {
+    //       val.forEach( (item, index) => {
+    //         item.num = index + 1
+    //       } )
+    //       storage.save(val);
+    //     },
+    //     deep: true
+    //   }
+    // }
   }
 </script>
 
