@@ -201,6 +201,7 @@ export default {
             url: "../list/",  
             data:{
             },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            contentType: 'application/json; charset=UTF-8',
             dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
             success:function(value){ 
               that.qsList = value            
@@ -214,7 +215,6 @@ export default {
               if ( i === that.qsList.length) that.isError = true    
             },  
             error:function(value){ 
-                that.loading = false; 
                 alert("编辑出现了错误！");  
             } 
         });          
@@ -378,17 +378,15 @@ export default {
       $.ajax({  
           type:"post",//type可以为post也可以为get  
           url: "../editList/",  
-          data:{
-            list
-          },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+          data:JSON.stringify(list),//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+          contentType: 'application/json; charset=UTF-8',
           dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
           success:function(value){ 
             if (value["status"] == 'success') {
-              this.$Message.success('新建问卷成功!')
+              // this.$Message.success('新建问卷成功!')
             }                     
           },  
           error:function(value){ 
-              that.loading = false; 
               alert("新建问卷失败！");  
           } 
       });        
@@ -407,21 +405,21 @@ export default {
         this.qsItem.state = 'inissue'
         this.qsItem.stateTitle = '发布中'
         var list = this.qsItem;
+        // console.log("fabu")
+        // console.log(list)
         $.ajax({  
             type:"post",//type可以为post也可以为get  
             url: "../editList/",  
-            data:{
-              list
-            },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            data: JSON.stringify(list),//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式 
+            contentType: 'application/json; charset=UTF-8', 
             dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
             success:function(value){ 
-              if (value["body"].status == 'success') {
-                this.$Message.success('新建问卷成功!')
+              if (value["status"] == 'success') {
+                // this.$Message.success('新建问卷成功!')
               }                     
             },  
             error:function(value){ 
-                that.loading = false; 
-                alert("新建问卷失败！");  
+                alert("发布问卷失败！");  
             } 
         });          
         // storage.save(this.qsList)
@@ -442,17 +440,17 @@ export default {
       return this.qsItem.question.length
     }
   },
-  // watch: {
-  //   '$route': 'fetchData',
-  //   qsItem: {
-  //     handler(newVal) {
-  //       newVal.question.forEach( (item, index) => {
-  //         item.num = `Q${index + 1}`
-  //       } )
-  //     },
-  //     deep: true
-  //   }
-  // }
+  watch: {
+    '$route': 'fetchData',
+    qsItem: {
+      handler(newVal) {
+        newVal.question.forEach( (item, index) => {
+          item.num = `Q${index + 1}`
+        } )
+      },
+      deep: true
+    }
+  }
 }
 </script>
 

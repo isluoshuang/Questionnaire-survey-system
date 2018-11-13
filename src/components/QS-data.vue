@@ -3,7 +3,7 @@
     <template v-if="!isError">
       <span class="back" @click="goBack()">&lt; 返回</span>
       <h2>{{qsItem.title}}</h2>
-      <p>此统计分析只包含完整回收的数据(数据皆为自制数据模拟来mock数据)</p>
+      <p>此统计分析只包含完整回收的数据</p>
     </template>
 
     <div class="content" v-if="!isError">
@@ -13,15 +13,19 @@
             <p>{{item.num}} &nbsp; {{item.title}}</p>
               <p class="option" v-for="option in item.options">{{option}}</p>
           </div>
+
           <div class="item-right" v-if="item.type === 'radio'">
             <p>数据占比</p>
-            <template v-for="(option, index) in item.options">
+            <div :id="`radio-${item.num}`">
+            </div>            
+            <!-- <template v-for="(option, index) in item.options">
               <div class="progress-bar">
                 <div class="bar-inner" :style="{width: renderProgressMath(item.options.length, index)}" v-if="renderProgressMath(item.options.length, index) !== '0%'"></div>
               </div>
               <span class="percent">{{renderProgressMath(item.options.length, index)}}</span>
-            </template>
+            </template> -->
           </div>
+
           <div class="item-right" v-else-if="item.type === 'textarea'">
             <p>有效回答占比</p>
               <div class="progress-bar">
@@ -29,11 +33,13 @@
               </div>
               <span class="percent">85%</span>
           </div>
+
           <div class="item-right" v-else>
             <p>数据占比</p>
             <div :id="`chart-${item.num}`">
             </div>
           </div>
+
         </div>
       </template>
     </div>
@@ -43,7 +49,9 @@
   </div>
 </template>
 
+<script src="echarts.min.js"></script>
 <script>
+
 import storage from '../store.js'
 import echarts from 'echarts/lib/echarts'
 import 'echarts/lib/chart/pie'
@@ -57,10 +65,11 @@ import 'echarts/lib/component/toolbox'
     data() {
       return {
         qsItem: {},
-        qsList: storage.get(),
+        qsList: [],
         isError: false,
         chartData: [],
-        chartNum: []
+        chartNum: [],
+        qsChoose: []
       }
     },
     created() {
@@ -74,14 +83,49 @@ import 'echarts/lib/component/toolbox'
     },
     methods: {
       fetchData() {
-        let i = 0;
-        for (let length = this.qsList.length; i < length; i++) {
-          if (this.qsList[i].num == this.$route.params.num) {
-            this.qsItem = this.qsList[i]
-            break
-          }
-        }
-        if (i === this.qsList.length) this.isError = true
+        var that = this;
+        $.ajax({  
+            type:"get",//type可以为post也可以为get  
+            url: "../list/",  
+            data:{
+            },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            async: false,
+            success:function(value){ 
+              that.qsList = value
+              console.log(that.qsList)
+              let i = 0;
+              for (let length = that.qsList.length; i < length; i++) {
+                if (that.qsList[i].num == that.$route.params.num) {
+                  that.qsItem = that.qsList[i]
+                  break
+                }
+              }
+              if (i === that.qsList.length) that.isError = true                           
+            },  
+            error:function(value){ 
+                alert("问卷数据显示出现错误");  
+            } 
+        });  
+        let data_num = {}
+        data_num["num"] = that.qsItem.num;
+        // console.log(JSON.stringify(data_num))
+        $.ajax({  
+            type:"POST",//type可以为post也可以为get  
+            url: "../showData/",  
+            data:
+              JSON.stringify(data_num)
+            ,//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            contentType: 'application/json; charset=UTF-8',
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            async: false,
+            success:function(value){             
+              that.qsChoose = value  
+            },  
+            error:function(value){ 
+                alert("问卷数据显示出现错误");  
+            } 
+        });                 
       },
       renderProgressMath(length, index) {
         if (length < 2) return '100%'
@@ -97,7 +141,8 @@ import 'echarts/lib/component/toolbox'
       },
       renderChartData() {  
         this.qsItem.question.forEach( item => {
-          if (item.type === 'checkbox') {
+          if (item.type === 'checkbox' || item.type === 'radio') {
+            // || item.type === 'radio'
             let value  = 0
             let sum    = 0
             let data   = []
@@ -106,69 +151,184 @@ import 'echarts/lib/component/toolbox'
             this.chartNum.push(item.num);
 
             item.options.forEach( (optionName, index) => {
-              if (index == length - 1) {
-                value = 1000 - sum
-              } else {
-                value = Math.floor(Math.random() * (1001 - sum))
-                sum += value
+              for (let i = 0; i < this.qsChoose.length; i++) {
+                if (this.qsChoose[i][item.num] != undefined) 
+                {
+                  value = this.qsChoose[i][item.num][optionName]
+                }
               }
+              // value = this.qsChoose[item.num][optionName]
+              sum += value
+              // if (index == length - 1) {
+              //   value = 1000 - sum
+              // } else {
+              //   value = Math.floor(Math.random() * (1001 - sum))
+              //   sum += value
+              // }
+
               data.push({value: value, name: optionName})
             } )
             this.chartData.push(data)
           }
-        } )
+        }) 
+        console.log(this.chartNum)
+        console.log(this.chartData)
       },
       renderEChart(chartNum, chartData) {
-        let myChart = echarts.init(document.getElementById(`chart-${chartNum}`))
-        let option = {
-          tooltip: {
-            trigger: 'item',
-            formatter: "{a} <br/>{b}选择人次 : {c} ({d}%)"
-          },
-          series: [
-            {
-              name: '数据占比',
-              type: 'pie',
-              radius: '55%',
-              center: ['50%', '60%'],
-              data: chartData
+        // `chart-${chartNum}`
+        var echarts = require('echarts');
+        console.log(this.qsItem['question'].length)
+        console.log(this.qsItem['question'])
+        for (let i = 0; i < this.qsItem['question'].length; i++) {
+          console.log(this.qsItem['question'][i])
+          if(this.qsItem['question'][i]['num'] == chartNum && this.qsItem['question'][i]['type'] == 'checkbox'){
+            console.log(this.qsItem['question'][i]['num'])
+            console.log(chartNum)
+            console.log(this.qsItem['question'][i]['type'])
+
+            console.log(document.getElementById(`chart-${chartNum}`))
+            let myChart = echarts.init(document.getElementById(`chart-${chartNum}`))
+            let option = {
+              tooltip: {
+                trigger: 'item',
+                formatter: "{a} <br/>{b}选择人次 : {c} ({d}%)"
+              },
+              series: [
+                {
+                  name: '数据占比',
+                  type: 'pie',
+                  radius: '55%',
+                  center: ['50%', '60%'],
+                  data: chartData
+                }
+              ],
+              itemStyle: {
+                emphasis: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
             }
-          ],
-          itemStyle: {
-            emphasis: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
+      
+            let currentIndex = -1;
+      
+            setInterval(function () {
+              var dataLen = option.series[0].data.length;
+      
+              myChart.dispatchAction({
+                type: 'downplay',
+                seriesIndex: 0,
+                dataIndex: currentIndex
+              });
+              currentIndex = (currentIndex + 1) % dataLen;
+      
+              myChart.dispatchAction({
+                type: 'highlight',
+                seriesIndex: 0,
+                dataIndex: currentIndex
+              });
+      
+              myChart.dispatchAction({
+                type: 'showTip',
+                seriesIndex: 0,
+                dataIndex: currentIndex
+              });
+            }, 1000);
+      
+            myChart.setOption(option)           
+          }
+          else if(this.qsItem['question'][i]['num'] == chartNum && this.qsItem['question'][i]['type'] == 'radio'){
+            console.log(this.qsItem['question'][i]['num'])
+            console.log(chartNum)
+            console.log(this.qsItem['question'][i]['type'])
+
+            console.log(document.getElementById(`radio-${chartNum}`))            
+            var myChart = echarts.init(document.getElementById(`radio-${chartNum}`));
+            var myValue = [];
+            var myName = [];
+            console.log("hhhh")
+            for(let i = 0; i < chartData.length; i++){
+              let value = chartData[i].value;
+              let name = chartData[i].name;
+              myValue.push(value)
+              myName.push(name)
             }
+            console.log(myName)
+            console.log(myValue)
+            var option = {
+              tooltip: {},
+              legend: {
+                  data:['条形图']
+              },
+              xAxis: {
+                  data: myName
+              },
+              yAxis: {},
+              series: [{
+                  name: '选项',
+                  type: 'bar',
+                  data: myValue                
+              }]
+            };
+            myChart.setOption(option);
+            console.log("kkkk")
           }
         }
+        // console.log(document.getElementById(`chart-${chartNum}`))
+        // let myChart = echarts.init(document.getElementById(`chart-${chartNum}`))
+        // let option = {
+        //   tooltip: {
+        //     trigger: 'item',
+        //     formatter: "{a} <br/>{b}选择人次 : {c} ({d}%)"
+        //   },
+        //   series: [
+        //     {
+        //       name: '数据占比',
+        //       type: 'pie',
+        //       radius: '55%',
+        //       center: ['50%', '60%'],
+        //       data: chartData
+        //     }
+        //   ],
+        //   itemStyle: {
+        //     emphasis: {
+        //       shadowBlur: 10,
+        //       shadowOffsetX: 0,
+        //       shadowColor: 'rgba(0, 0, 0, 0.5)'
+        //     }
+        //   }
+        // }
   
-        let currentIndex = -1;
+        // let currentIndex = -1;
   
-        setInterval(function () {
-          var dataLen = option.series[0].data.length;
+        // setInterval(function () {
+        //   var dataLen = option.series[0].data.length;
   
-          myChart.dispatchAction({
-            type: 'downplay',
-            seriesIndex: 0,
-            dataIndex: currentIndex
-          });
-          currentIndex = (currentIndex + 1) % dataLen;
+        //   myChart.dispatchAction({
+        //     type: 'downplay',
+        //     seriesIndex: 0,
+        //     dataIndex: currentIndex
+        //   });
+        //   currentIndex = (currentIndex + 1) % dataLen;
   
-          myChart.dispatchAction({
-            type: 'highlight',
-            seriesIndex: 0,
-            dataIndex: currentIndex
-          });
+        //   myChart.dispatchAction({
+        //     type: 'highlight',
+        //     seriesIndex: 0,
+        //     dataIndex: currentIndex
+        //   });
   
-          myChart.dispatchAction({
-            type: 'showTip',
-            seriesIndex: 0,
-            dataIndex: currentIndex
-          });
-        }, 1000);
+        //   myChart.dispatchAction({
+        //     type: 'showTip',
+        //     seriesIndex: 0,
+        //     dataIndex: currentIndex
+        //   });
+        // }, 1000);
   
-        myChart.setOption(option)
+        // myChart.setOption(option)
+
+
+
       },
       goBack() {
         this.$router.push({path:'/'})

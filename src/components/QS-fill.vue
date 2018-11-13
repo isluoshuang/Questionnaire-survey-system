@@ -1,3 +1,4 @@
+<!-- v-model="requiredItem[item.num]" -->
 <template>
   <div class="fill-container">
     <div class="fill" v-if="!isError">
@@ -12,12 +13,14 @@
             <label>
               <input 
               type="radio" 
+              id = "radio"
               :name="`${item.num}-${item.title}`"
               v-model="requiredItem[item.num]"
               v-if="item.type === 'radio'"
               :value="option">
               <input 
               type="checkbox" 
+              id = "checkbox"
               :name="`${item.num}-${item.title}`"
               v-model="requiredItem[item.num]"
               v-if="item.type === 'checkbox'"
@@ -25,6 +28,7 @@
             </label>
           </p>
           <textarea 
+          id = "textarea"
           v-if="item.type === 'textarea'" 
           v-model="requiredItem[item.num]"></textarea>
         </div>
@@ -62,7 +66,7 @@
 </template>
 
 <script>
-import storage from '../store.js'
+// import storage from '../store.js'
 
 /**
  * A module that define qs-fill router view
@@ -72,31 +76,58 @@ import storage from '../store.js'
     data() {
       return {
         qsItem: [],
-        qsList: storage.get(),
+        qsList: [],
         isError: false,
         showDialog: false,
         info: '',
         submitError: false,
-        requiredItem: {}
+        requiredItem: {},
       }
     },
     created() {
       this.fetchData()
     },
-    mounted() {
-      this.getRequiredItem()
-    },
+    // mounted() {
+    //   this.getRequiredItem()
+    // },
     methods: {
       fetchData() {
-        let i = 0;
-        for (let length = this.qsList.length; i < length; i++) {
-          if (this.qsList[i].num == this.$route.params.num) {
-            this.qsItem = this.qsList[i]
-            break
-          }
-        }
-        if (i === this.qsList.length) this.isError = true
-      },
+        // console.log("fetchData")
+        var that = this;
+        $.ajax({  
+            type:"get",//type可以为post也可以为get  
+            url: "../list/",  
+            data:{
+            },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+            dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+            success:function(value){ 
+              that.qsList = value
+              console.log(that.qsList)
+              let i = 0;
+              for (let length = that.qsList.length; i < length; i++) {
+                if (that.qsList[i].num == that.$route.params.num) {
+                  that.qsItem = that.qsList[i]
+                  break
+                }
+              }
+              if (i === that.qsList.length) that.isError = true
+
+              that.qsItem.question.forEach( item => {
+                if (item.isNeed) {
+                  if (item.type === 'checkbox') {
+                    that.requiredItem[item.num] = []
+                  } else {
+                    that.requiredItem[item.num] = ''
+                  }
+                }
+              } )
+
+            },  
+            error:function(value){ 
+                alert("问卷查询出现错误");  
+            } 
+        }); 
+      },    
       getMsg(item) {
         let msg = ''
         if (item.type === 'radio') {
@@ -115,6 +146,25 @@ import storage from '../store.js'
           if (result) {
             this.showDialog = true
             this.submitError = false
+            // let that = this
+            let send_data = {}
+            send_data["num"] = this.qsItem.num
+            send_data["question"] = this.requiredItem          
+            $.ajax({  
+                type:"post",//type可以为post也可以为get  
+                url: "../addChoose/",
+                data: JSON.stringify(send_data),//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
+                contentType: 'application/json; charset=UTF-8',
+                dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
+                success:function(value){ 
+                  if (value["status"] == 'success') {
+                    // this.$Message.success('新建问卷成功!')
+                  }                     
+                },  
+                error:function(value){ 
+                  alert("提交问卷失败！");  
+                } 
+            });              
             this.info = '提交成功！'
             setTimeout(() => {
               this.showDialog = false
@@ -133,25 +183,31 @@ import storage from '../store.js'
           this.info = '提交失败！ 只有发布中的问卷才能提交'
         }
       },
-      getRequiredItem() {
-        this.qsItem.question.forEach( item => {
-          if (item.isNeed) {
-            if (item.isNeed) {
-              if (item.type === 'checkbox') {
-                this.requiredItem[item.num] = []
-              } else {
-                this.requiredItem[item.num] = ''
-              }
-            }
-          }
-        } )
-      },
+      // getRequiredItem() {    
+      //   this.qsItem.question.forEach( item => {
+      //     if (item.isNeed) {
+      //       if (item.type === 'checkbox') {
+      //         this.requiredItem[item.num] = []
+      //       } else {
+      //         this.requiredItem[item.num] = ''
+      //       }
+      //     }
+      //   } )
+      // },
       validate() {
         for (let i in this.requiredItem) {
           if (this.requiredItem[i].length === 0) return false
         }
         return true
-      }
+      },
+      // saveOption(num){
+      //   console.log("fortest")
+      //   console.log(num)
+      //   console.log(this.requiredItem)
+      //   // console.log(this.choose)
+      // }      
+
+
     },
     watch: {
       '$route': 'fetchData'

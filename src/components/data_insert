@@ -64,3 +64,24 @@ db.list.insert(
 	}
 )
 
+
+db.list.insert(
+	{ 
+		num: 2,
+		question: [
+			{
+				num: 'Q1', 
+				options: ['选项一']
+			},
+		  	{
+			  	num: 'Q2', 
+			  	options: ['选项一', '选项二', '选项三', '选项四']
+		  	},
+		  	{
+				num: 'Q3', 
+				options: ['哈哈哈哈']
+		  	}
+		]
+	}
+)
+

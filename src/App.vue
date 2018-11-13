@@ -5,6 +5,7 @@
   </div>
 </template>
 
+<script src="echarts.min.js"></script>
 <script>
 /**
  * description app.vue

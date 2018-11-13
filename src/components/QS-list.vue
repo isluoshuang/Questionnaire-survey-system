@@ -70,29 +70,27 @@
           data:{
           },//这行不能省略，如果没有数据向后台提交也要写成data:{}的形式  
           dataType:"json",//这里要注意如果后台返回的数据不是json格式，那么就会进入到error:function(data){}中  
-          success:function(value){ 
-              // console.log(value)
-              that.qsList = value;
-              that.qsList.forEach( item => {
-                let [year, month, day] = item.time.split('-')
-                if (year < new Date().getFullYear()) {
-                  item.state = 'issueed'
-                  item.stateTitle = '已发布'
-                } else if (year == new Date().getFullYear() 
-                  && month < new Date().getMonth() + 1) {
-                  item.state = 'issueed'
-                  item.stateTitle = '已发布'
-                } else if (year == new Date().getFullYear() 
-                  && month == new Date().getMonth() + 1 
-                  && day < new Date().getDate()) {
-                  item.state = 'issueed'
-                  item.stateTitle = '已发布'
-                }
-              })               
-               
+          success:function(value){               
+            // console.log(value)
+            that.qsList = value;
+            that.qsList.forEach( item => {
+              let [year, month, day] = item.time.split('-')
+              if (year < new Date().getFullYear()) {
+                item.state = 'issueed'
+                item.stateTitle = '已发布'
+              } else if (year == new Date().getFullYear() 
+                && month < new Date().getMonth() + 1) {
+                item.state = 'issueed'
+                item.stateTitle = '已发布'
+              } else if (year == new Date().getFullYear() 
+                && month == new Date().getMonth() + 1 
+                && day < new Date().getDate()) {
+                item.state = 'issueed'
+                item.stateTitle = '已发布'
+              }
+            })                              
           },  
           error:function(value){ 
-              that.loading = false; 
               alert("查询出现了错误！");  
           } 
       });       

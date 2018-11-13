@@ -88,6 +88,14 @@ $lightorange: #fcf0e5;
           left: -5rem;
         }
       }
+      div[id^="radio"] {
+        width: 33rem;
+        height: 14rem;
+        margin: {
+          top: -3rem;
+          left: -5rem;
+        }
+      }      
     }
   }
 }

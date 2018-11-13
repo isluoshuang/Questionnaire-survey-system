@@ -41,16 +41,21 @@ def addList(data):
     mycol = mydb[connection]
     # result = mycol.find()
     # result_list = list(result[:])
-    if data["num"] == 1:
-        result = list(mycol.find().sort("num", -1).limit(1))[0]['num']
-        data["num"] = result + 1
-        mycol.insert_one(data)
+    # print("hhhhh\n\n")
+    # print(data)
+    # print(data["num"])
+    if data != None:
+        if data["num"] == 1:
+            result = list(mycol.find().sort("num", -1).limit(1))[0]['num']
+            data["num"] = result + 1
+            mycol.insert_one(data)
+        else:
+            myquery = { "num": data["num"] }
+            newvalues = { "$set": data }
+            mycol.update_one(myquery, newvalues)
+            # mycol.delete_one(myquery)
     else:
-        myquery = { "num": data["num"] }
-        newvalues = { "$set": data }
-        mycol.update_one(myquery, newvalues)
-        # mycol.delete_one(myquery)
-
+        pass
     close(conn)
     return
 
@@ -64,6 +69,40 @@ def deleteList(num):
     close(conn)
     return
 
+#将新问卷存入数据库
+def addChoose(data):
+    conn = open()
+    mydb = conn[database]
+    mycol = mydb["choose"]
+    # result = mycol.find()
+    # result_list = list(result[:])
+    # print("hhhhh\n\n")
+    # print(data)
+    # print(data["num"])
+    if data != None:
+        mycol.insert_one(data)
+    else:
+        pass
+    close(conn)
+    return
+
+def get_choose_info(data):
+    conn = open()
+    mydb = conn[database]
+    mycol = mydb["choose"]
+    myquery = { "num": data['num'] }   
+    result = mycol.find(myquery)
+    close(conn)
+    return result
+
+def get_question(data):
+    conn = open()
+    mydb = conn[database]
+    mycol = mydb[connection]
+    myquery = { "num": data['num'] }   
+    result = mycol.find(myquery)
+    close(conn)
+    return result
 #获取帐号密码
 # def APIlogin(result):
 #     conn, cursor = open()

@@ -25,7 +25,6 @@ def index():
 @app.route('/list/', methods=["get"])
 def showList():
     result = db.get_list_info()
-    # print(result)
     ret = []
     for i in result:
         ret.append({
@@ -37,6 +36,7 @@ def showList():
             "checked": i['checked'],
             "question": i['question']
         })
+    # print("test\n\n")   
     # print (ret)
     return json.dumps(ret)
 
@@ -44,8 +44,8 @@ def showList():
 @app.route('/editList/',methods=["POST"])
 def addList():
     data = request.get_json() #bytes
-    print("hhhhh\n")
-    print(data)    
+    # print("data_receive\n")
+    # print(data)    
     db.addList(data)
     ret = {"status": "success"}
     return json.dumps(ret)
@@ -61,6 +61,96 @@ def deleteList():
     db.deleteList(num)
     ret = {"status": "success"}
     return json.dumps(ret)
+
+#填写问卷
+@app.route('/addChoose/',methods=["POST"])
+def addChoose():
+    data = request.get_json() #bytes
+    # print("data_receive\n")
+    # print(data)    
+    db.addChoose(data)
+    ret = {"status": "success"}
+    return json.dumps(ret)
+
+#获取问卷回答信息
+@app.route('/showData/', methods=["POST"])
+def showData():
+    data = request.get_json() #bytes
+    # print("data_receive\n")
+    # print(data)
+
+    choose_result = db.get_choose_info(data)
+    choose = []
+    for i in choose_result:
+        choose.append({
+            "num": i['num'],
+            "question": i['question']
+        })
+    # print(type(choose))
+    # print(type(choose[0]))
+    #[{'num': 1, 'question': {'Q1': '选项一', 'Q2': ['选项二', '选项三'], 'Q3': '猪猪傻逼'}}, 
+    #{'num': 1, 'question': {'Q1': '选项二', 'Q2': ['选项一', '选项二', '选项三'], 'Q3': '我也觉得'}}, 
+    #{'num': 1, 'question': {'Q1': '选项一', 'Q2': ['选项二', '选项三', '选项一', '选项四'], 'Q3': '我不认可'}}]
+
+    result = db.get_question(data)
+    ques = []
+    for i in result:
+        ques.append({
+            "num": i['num'],
+            "question": i['question']
+        })
+    ques = ques[0]
+
+    # print(ques['question'])
+    # [{'num': 'Q1', 'title': '单选题', 'type': 'radio', 'isNeed': True, 'options': ['选项一', '选项二']}, 
+    # {'num': 'Q2', 'title': '多选题', 'type': 'checkbox', 'isNeed': True, 'options': ['选项一', '选项二', '选项三', '选项四']}, 
+    # {'num': 'Q3', 'title': '文本题', 'type': 'textarea', 'isNeed': True}]
+    res = []
+    for q in ques['question']:
+        if q['type'] != 'textarea':
+            # print("q = \n")
+            # print(q)
+            q_dict = dict()
+            chos = q['options']
+            # print("chos = \n")
+            # print(chos)
+            for cho in chos:
+                q_dict[cho] = 0
+            count_dict = {
+                q['num'] : q_dict
+            }
+            # print("count_dict = \n")
+            # print(count_dict)
+            for c in choose:
+                # print("c = \n")
+                # print(c)
+                # print(c['question'][q['num']])
+                if(type(c['question'][q['num']]) == str):
+                    ans = c['question'][q['num']]
+                    # print(ans)
+                    count_dict[q['num']][ans] = count_dict[q['num']][ans] + 1
+                else:
+                    for ans in c['question'][q['num']]:
+                        # print(ans)
+                        count_dict[q['num']][ans] = count_dict[q['num']][ans] + 1
+            # print("count_dict = \n")
+            # print(count_dict)
+            # print("res = \n")
+            res.append(count_dict)
+        else:
+            pass
+    print("res\n")
+    print(res)
+    # [{'Q1': {'选项一': 2, '选项二': 1}}, 
+    # {'Q2': {'选项一': 2, '选项二': 3, '选项三': 3, '选项四': 1}}]
+    return json.dumps(res)
+
+
+
+
+
+
+
 
 # #管理页
 # @app.route('/manage/')
